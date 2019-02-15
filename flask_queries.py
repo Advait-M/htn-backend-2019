@@ -5,8 +5,10 @@ from flask import jsonify
 from flask import request
 from flask import abort
 
-#TODO: Add user functionality
-#TODO: Delete user functionality
+#TODO: Add user functionality - done
+#TODO: Delete user functionality - done
+# TODO: Advanced skills querying
+
 
 DB_NAME = "example8.db"
 SQLITE_TYPES = {"null": None, "integer": int, "real": float, "text": str}
@@ -199,11 +201,14 @@ def add_user():
 
 @app.route('/users/<user_email>', methods=['DELETE'])
 def delete_user(user_email):
+    if not check_if_exists(user_email):
+        abort(400, "User with specified email does not exist.")
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
         c.row_factory = sqlite3.Row
-
-
+        c.execute("DELETE FROM users WHERE email = ?", [user_email])
+        c.execute("DELETE FROM skills WHERE email = ?", [user_email])
+    return "Deleted user successfully!", 200
 
 
 @app.route('/skills', methods=['GET'])
