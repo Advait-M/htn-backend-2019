@@ -151,6 +151,7 @@ def update_user(user_email):
     print(get_user(user_email) == [])
     return get_user(user_email)
 
+# TODO: type checking - done
 @app.route('/users/add_user', methods=['POST'])
 def add_user():
     data = request.get_json()
@@ -160,13 +161,33 @@ def add_user():
         keys = {}
         for i in c.execute("PRAGMA table_info(users)").fetchall():
             print("i222", tuple(i))
-            # Get column names not including primary key (email)
-            if i[5] == 0:
-                keys[i[1]] = SQLITE_TYPES[i[2]]
+            # Get column names including primary key
+            keys[i[1]] = SQLITE_TYPES[i[2]]
         print(keys)
         for i in keys:
             if i not in data:
                 abort(400, "Missing field: " + i)
+            if keys[i] != type(data[i]):
+                abort(400, "Incorrect type: " + i)
+        if type(data["skills"]) != list:
+            abort(400, "Skills must be a list.")
+
+        skill_keys = {}
+        for i in c.execute("PRAGMA table_info(skills)").fetchall():
+            print("i222", tuple(i))
+            # Get column names not including foreign key (email)
+            if i[1] != "email":
+                skill_keys[i[1]] = SQLITE_TYPES[i[2]]
+        print("sk", skill_keys)
+        for i in data["skills"]:
+            if type(i) != dict:
+                abort(400, "Skill information must be provided nested dictionaries.")
+
+            for j in skill_keys:
+                if j not in i:
+                    abort(400, "Skill missing required field: " + j)
+                if type(j) != type(i[j]):
+                    abort(400, "Skill field of wrong type (must be string): " + j)
 
         try:
             c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?)", (data["email"], data["name"], data["picture"], data["company"], data["phone"], data["latitude"], data["longitude"]))
