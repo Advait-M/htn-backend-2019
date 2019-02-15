@@ -102,3 +102,10 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+
+# SQLite
+.db
+
+# PyCharm
+.idea
