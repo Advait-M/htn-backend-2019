@@ -236,11 +236,17 @@ def get_skills_user(user_email):
         additional = ""
         values = [user_email]
         if "min_rating" in args:
+            try:
+                values.append(int(args["min_rating"]))
+            except ValueError:
+                abort(400, "min_rating must be an integer")
             additional += " AND rating >= ?"
-            values.append(args["min_rating"])
         if "max_rating" in args:
+            try:
+                values.append(int(args["max_rating"]))
+            except ValueError:
+                abort(400, "max_rating must be an integer")
             additional += " AND rating <= ?"
-            values.append(args["max_rating"])
         # final_result = []
         # for i in c.execute("SELECT name, rating FROM skills WHERE email = ?" + additional, values).fetchall()
         #     final_result.append()
