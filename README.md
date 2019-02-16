@@ -318,7 +318,7 @@ Example Result:
 ```
 
 
-## Get all skills (GET request)
+### Get all skills (GET request)
 Querying `/skills` returns a JSON with all skills and their frequencies. Optional parameters for minimum and maximum frequencies can be added as well.
 
 Query: `localhost:5000/skills`
