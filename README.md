@@ -14,11 +14,15 @@ The skills table contains the email associated with the user that has a particul
 
 ![Skills Schema](https://raw.githubusercontent.com/Advait-M/htn-backend-2019/master/img/skills_table_schema.PNG)
 
-## API Endpoints
+## API Endpoints with Examples
 
-### Get all users
-Qeurying the /users endpoint will return a list of all users which contains their attributes in the JSON format that was inputted. For example:
-Query: "localhost:5000/users"
+### Get all users (GET request)
+Querying the /users endpoint will return a list of all users which contains their attributes in the JSON format that was inputted.
+
+Example
+
+Query: `localhost:5000/users`
+
 Example Partial Result:
 ```json
 [
@@ -63,25 +67,99 @@ Example Partial Result:
                 "rating": "2"
             }
         ]
-    },
-    {
-        "company": "Zizzle",
-        "email": "doraschultz@zizzle.com",
-        "latitude": 49.1174,
-        "longitude": -35.0231,
-        "name": "Sheri Cunningham",
-        "phone": "+1 (949) 548-2223",
-        "picture": "http://lorempixel.com/200/200/sports/5",
-        "skills": [
-            {
-                "name": "Go",
-                "rating": "9"
-            },
-            {
-                "name": "Public Speaking",
-                "rating": "5"
-            }
-        ]
     }
 ```
+
+### Get specific user (GET request)
+Querying the /users/<user_email> endpoint with a specific user's email will return the complete details of that user.
+
+Example
+
+Query: `localhost:5000/users/tonibright@nixelt.com`
+
+Example Result:
+```json
+{
+    "company": "Nixelt",
+    "email": "tonibright@nixelt.com",
+    "latitude": 49.34,
+    "longitude": -35.9086,
+    "name": "Puckett Fletcher",
+    "phone": "+1 (895) 552-3464",
+    "picture": "http://lorempixel.com/200/200/sports/3",
+    "skills": [
+        {
+            "name": "C++",
+            "rating": "6"
+        }
+    ]
+}
+```
+
+### Add user (POST request)
+A POST request with a JSON body can be used to add a new user. The new user must have a new, unique email and must follow the specified format with regards to the fields of the JSON. If certain fields aren't specified or do not match the required types, a 400 HTTP error is returned with a short description outlining the reason why the request failed. If the request is successful, a 200 HTTP code is returned along with a JSON representing the user that has just been added.
+
+Examples
+
+Query: `http://127.0.0.1:5000/users/add_user`
+JSON Body:
+```json
+{
+    "company": "TestCompany",
+    "email": "testexample@zizzle.com",
+    "latitude": 48.9288,
+    "longitude": -35.0231,
+    "name": "Test Example",
+    "phone": "+2 (555) 123 4567",
+    "picture": "http://lorempixel.com/200/200/sports/5",
+    "skills": [
+        {
+            "name": "Go",
+            "rating": "10"
+        },
+        {
+            "name": "Public Speaking",
+            "rating": "5"
+        }
+    ]
+}
+```
+
+Example Result:
+```json
+{
+    "company": "TestCompany",
+    "email": "testexample@zizzle.com",
+    "latitude": 48.9288,
+    "longitude": -35.0231,
+    "name": "Test Example",
+    "phone": "+2 (555) 123 4567",
+    "picture": "http://lorempixel.com/200/200/sports/5",
+    "skills": [
+        {
+            "name": "Go",
+            "rating": "10"
+        },
+        {
+            "name": "Public Speaking",
+            "rating": "5"
+        }
+    ]
+}
+```
+
+If we attempt to add the same user (duplicate email) again, we get:
+Query: Same as above
+
+Example Result:
+```HTML
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>User already in database: testexample@zizzle.com</p>
+```
+
+
+
+
 
