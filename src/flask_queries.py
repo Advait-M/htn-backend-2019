@@ -2,7 +2,7 @@ import sqlite3
 from flask import Flask, jsonify, request, abort
 
 # Database file name
-DB_NAME = "htn.db"
+DB_NAME = "src/htn.db"
 # Maps SQLite data types to Python types
 SQLITE_TYPES = {"null": None, "integer": int, "real": float, "text": str}
 
