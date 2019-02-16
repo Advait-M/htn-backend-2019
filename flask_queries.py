@@ -107,6 +107,20 @@ def check_if_exists(user_email):
         else:
             return True
 
+# def delete_skill_if_exists(user_email, skill_name):
+#     with sqlite3.connect(DB_NAME) as conn:
+#         c = conn.cursor()
+#         c.row_factory = sqlite3.Row
+#
+#         query_result = c.execute("DELETE * FROM skills WHERE email = ?", [user_email])
+#         # print(query_result.fetchall())
+#         results = query_result.fetchall()
+#         print("rc", query_result.rowcount)
+#         if len(results) == 0:
+#             return False
+#         else:
+#             return True
+
 # TODO: add skills
 @app.route('/users/<user_email>', methods=['PUT'])
 def update_user(user_email):
@@ -138,11 +152,19 @@ def update_user(user_email):
                     # return "ERROR"
                 else:
                     to_update[j[0]] = j[1]
+
+        # to_update["skills"] = given_to_update["skills"]
         # to_update = dict([j for j in given_to_update.items() if (j[0], type(j[1])) in keys])
         print(to_update)
         print("here")
         print(",".join([j[0] + " = ? " for j in to_update.items()]))
         print([j[1] for j in to_update.items()])
+
+        if "skills" in given_to_update:
+            validate_skills(given_to_update)
+            for i in given_to_update["skills"]:
+                c.execute("DELETE FROM skills WHERE email = ? AND name = ?", [user_email, i["name"]])
+                c.execute("INSERT INTO skills VALUES (?, ?, ?)", [user_email, i["name"], i["rating"]])
 
         if len(to_update) > 0:
             update_columns = ",".join([j[0] + " = ? " for j in to_update.items()])
@@ -152,6 +174,29 @@ def update_user(user_email):
         conn.commit()
     print(get_user(user_email) == [])
     return get_user(user_email)
+
+
+def validate_skills(data):
+    with sqlite3.connect(DB_NAME) as conn:
+        c = conn.cursor()
+        c.row_factory = sqlite3.Row
+        skill_keys = {}
+        for i in c.execute("PRAGMA table_info(skills)").fetchall():
+            print("i222", tuple(i))
+            # Get column names not including foreign key (email)
+            if i[1] != "email":
+                skill_keys[i[1]] = SQLITE_TYPES[i[2]]
+        print("sk", skill_keys)
+        for i in data["skills"]:
+            if type(i) != dict:
+                abort(400, "Skill information must be provided nested dictionaries.")
+
+            for j in skill_keys:
+                if j not in i:
+                    abort(400, "Skill missing required field: " + j)
+                if type(j) != type(i[j]):
+                    abort(400, "Skill field of wrong type (must be string): " + j)
+
 
 # TODO: type checking - done
 @app.route('/users/add_user', methods=['POST'])
@@ -174,22 +219,23 @@ def add_user():
         if type(data["skills"]) != list:
             abort(400, "Skills must be a list.")
 
-        skill_keys = {}
-        for i in c.execute("PRAGMA table_info(skills)").fetchall():
-            print("i222", tuple(i))
-            # Get column names not including foreign key (email)
-            if i[1] != "email":
-                skill_keys[i[1]] = SQLITE_TYPES[i[2]]
-        print("sk", skill_keys)
-        for i in data["skills"]:
-            if type(i) != dict:
-                abort(400, "Skill information must be provided nested dictionaries.")
-
-            for j in skill_keys:
-                if j not in i:
-                    abort(400, "Skill missing required field: " + j)
-                if type(j) != type(i[j]):
-                    abort(400, "Skill field of wrong type (must be string): " + j)
+        validate_skills(data)
+        # skill_keys = {}
+        # for i in c.execute("PRAGMA table_info(skills)").fetchall():
+        #     print("i222", tuple(i))
+        #     # Get column names not including foreign key (email)
+        #     if i[1] != "email":
+        #         skill_keys[i[1]] = SQLITE_TYPES[i[2]]
+        # print("sk", skill_keys)
+        # for i in data["skills"]:
+        #     if type(i) != dict:
+        #         abort(400, "Skill information must be provided nested dictionaries.")
+        #
+        #     for j in skill_keys:
+        #         if j not in i:
+        #             abort(400, "Skill missing required field: " + j)
+        #         if type(j) != type(i[j]):
+        #             abort(400, "Skill field of wrong type (must be string): " + j)
 
         try:
             c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?)", (data["email"], data["name"], data["picture"], data["company"], data["phone"], data["latitude"], data["longitude"]))
