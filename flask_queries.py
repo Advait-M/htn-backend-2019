@@ -261,13 +261,28 @@ def delete_user(user_email):
 def get_skills():
     args = request.args
     print(args)
-    skill_name = None
-    min_rating = None
-    min_freq = None
-    if "skill_name" in args:
-        pass
-
-    return jsonify([])
+    with sqlite3.connect(DB_NAME) as conn:
+        c = conn.cursor()
+        c.row_factory = sqlite3.Row
+        try:
+            min_freq = int(args["min_freq"]) if "min_freq" in args else 1
+        except ValueError:
+            abort(400, "Minimum frequency specified must be an integer.")
+        condition = "COUNT(*) >= ?"
+        values = [min_freq]
+        if "max_freq" in args:
+            try:
+                max_freq = int(args["max_freq"])
+            except ValueError:
+                abort(400, "Maximum frequency specified must be an integer.")
+            condition += " AND COUNT(*) <= ?"
+            values.append(max_freq)
+        result = []
+        for row in c.execute(
+                '''SELECT name, COUNT(*) FROM skills
+                   GROUP BY name HAVING ''' + condition, values):
+            result.append({"name": row[0], "frequency": row[1]})
+        return jsonify(result)
 
 @app.route('/skills/<user_email>', methods=['GET'])
 def get_skills_user(user_email):
@@ -301,7 +316,7 @@ def get_skills_user(user_email):
 
 
 
-@app.route('/skills/<skill_name>', methods=['GET'])
+@app.route('/skills/frequency/<skill_name>', methods=['GET'])
 def get_skill_frequency(skill_name):
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
@@ -311,6 +326,19 @@ def get_skill_frequency(skill_name):
         # print(query_result.fetchone()[0])
         return jsonify({"skill_frequency": query_result.fetchone()[0]})
 
+@app.route('/skills/average/<skill_name>', methods=['GET'])
+def get_skill_average(skill_name):
+    with sqlite3.connect(DB_NAME) as conn:
+        c = conn.cursor()
+        c.row_factory = sqlite3.Row
+        query_result = c.execute("SELECT AVG(rating) FROM skills WHERE name = ?", [skill_name])
+        print(query_result)
+        # print(query_result.fetchone()[0])
+        frequency = query_result.fetchone()[0]
+        print(frequency)
+        if frequency is None:
+            abort(400, "No skills found with specified name")
+        return jsonify({"skill_frequency": frequency})
 
 if __name__ == '__main__':
     app.run(debug=True)
