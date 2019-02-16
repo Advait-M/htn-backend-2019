@@ -8,8 +8,8 @@ The database consists of two tables: the "users" table and the "skills" table.
 
 The users table contains all associated attributes of each user other than their skills. The user's email is used as a PRIMARY KEY (must be non-NULL and unique). The types of the fields are shown below:
 
-![Users Schema](https://raw.githubusercontent.com/Advait-M/htn-backend-2019/master/users_table_schema.PNG)
+![Users Schema](https://raw.githubusercontent.com/Advait-M/htn-backend-2019/master/img/users_table_schema.PNG)
 
 The skills table contains the email associated with the user that has a particular skill (this is a FOREIGN KEY) in addition to the name of the skill and the rating. The types of these fields are shown below:
 
-![Skills Schema](https://raw.githubusercontent.com/Advait-M/htn-backend-2019/master/skills_table_schema.PNG)
+![Skills Schema](https://raw.githubusercontent.com/Advait-M/htn-backend-2019/master/img/skills_table_schema.PNG)
