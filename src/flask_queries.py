@@ -1,23 +1,30 @@
 import sqlite3
 from flask import Flask, jsonify, request, abort
 
+# Database file name
 DB_NAME = "htn.db"
+# Maps SQLite data types to Python types
 SQLITE_TYPES = {"null": None, "integer": int, "real": float, "text": str}
 
+# Initialize Flask app
 app = Flask(__name__)
 
 
 @app.route('/')
 def index():
+    """Welcome page for the API."""
     return "Welcome to Advait's Hack the North Backend Challenge 2019. Feel free to explore the various endpoints!", 200
 
 
 @app.route('/users', methods=['GET'])
 def get_users():
+    """Get all users and their associated information from the database."""
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
         c.row_factory = sqlite3.Row
+
         result = []
+
         for row in c.execute("SELECT * FROM users").fetchall():
             user = dict(zip(row.keys(), tuple(row)))
 
@@ -31,6 +38,7 @@ def get_users():
 
 @app.route('/users/<user_email>', methods=['GET'])
 def get_user(user_email):
+    """Get a specific user's details (lookup by email)."""
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
         c.row_factory = sqlite3.Row
@@ -53,6 +61,7 @@ def get_user(user_email):
 
 
 def check_if_exists(user_email):
+    """Check if a user exists (lookup by email)."""
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
         c.row_factory = sqlite3.Row
@@ -71,9 +80,15 @@ def check_if_exists(user_email):
 
 @app.route('/users/<user_email>', methods=['PUT'])
 def update_user(user_email):
+    """
+    Update user with specified key-value pairs. Must match appropriate field types.
+    Any extra fields are ignored. New skills are added if needed.
+    """
     if not check_if_exists(user_email):
         abort(400, "User with email address provided does not exist.")
+
     given_to_update = request.get_json()
+
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
         c.row_factory = sqlite3.Row
@@ -82,6 +97,8 @@ def update_user(user_email):
             # Get column names not including primary key (email)
             if i[5] == 0:
                 keys[i[1]] = SQLITE_TYPES[i[2]]
+
+        # We ignore any extra fields
         to_update = {}
         for j in given_to_update.items():
             if j[0] in keys:
@@ -113,12 +130,14 @@ def update_user(user_email):
                 update_columns +
                 " WHERE email = ?",
                 update_values).fetchall()
+
         conn.commit()
 
     return get_user(user_email)
 
 
 def validate_skills(data):
+    """Validates schema of skills array."""
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
         c.row_factory = sqlite3.Row
@@ -131,7 +150,7 @@ def validate_skills(data):
         for i in data["skills"]:
             if not isinstance(i, dict):
                 abort(
-                    400, "Skill information must be provided nested dictionaries.")
+                    400, "Skill information must be provided as nested objects with required fields.")
 
             for j in skill_keys:
                 if j not in i:
@@ -141,9 +160,9 @@ def validate_skills(data):
                         400, "Skill field of wrong type (must be string): " + j)
 
 
-# TODO: type checking - done
 @app.route('/users/add_user', methods=['POST'])
 def add_user():
+    """Add user (must be new, unique email) with specified details."""
     data = request.get_json()
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
@@ -177,11 +196,15 @@ def add_user():
         for skill in data["skills"]:
             c.execute("INSERT INTO skills VALUES (?, ?, ?)",
                       (data["email"], skill["name"], skill["rating"]))
+
+        conn.commit()
+
     return get_user(data["email"])
 
 
 @app.route('/users/<user_email>', methods=['DELETE'])
 def delete_user(user_email):
+    """Delete specified user (found by email)."""
     if not check_if_exists(user_email):
         abort(400, "User with specified email does not exist.")
     with sqlite3.connect(DB_NAME) as conn:
@@ -189,21 +212,31 @@ def delete_user(user_email):
         c.row_factory = sqlite3.Row
         c.execute("DELETE FROM users WHERE email = ?", [user_email])
         c.execute("DELETE FROM skills WHERE email = ?", [user_email])
+
+        conn.commit()
+
     return "Deleted user successfully!", 200
 
 
 @app.route('/skills', methods=['GET'])
 def get_skills():
+    """
+    Get all skills with their associated skill frequencies.
+    Optional parameters to specify minimum/maximum frequency.
+    """
     args = request.args
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
         c.row_factory = sqlite3.Row
+
         try:
             min_freq = int(args["min_freq"]) if "min_freq" in args else 1
         except ValueError:
             abort(400, "Minimum frequency specified must be an integer.")
+
         condition = "COUNT(*) >= ?"
         values = [min_freq]
+
         if "max_freq" in args:
             try:
                 max_freq = int(args["max_freq"])
@@ -211,30 +244,37 @@ def get_skills():
                 abort(400, "Maximum frequency specified must be an integer.")
             condition += " AND COUNT(*) <= ?"
             values.append(max_freq)
+
         result = []
+
         for row in c.execute(
                 '''SELECT name, COUNT(*) FROM skills
                    GROUP BY name HAVING ''' + condition, values):
             result.append({"name": row[0], "frequency": row[1]})
+
         return jsonify(result)
 
 
 @app.route('/skills/<user_email>', methods=['GET'])
 def get_skills_user(user_email):
+    """Get skills of specific user. Optional parameters to specify minimum/maximum ratings."""
     if not check_if_exists(user_email):
         abort(400, "User with email address provided does not exist.")
     args = request.args
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
         c.row_factory = sqlite3.Row
+
         additional = ""
         values = [user_email]
+
         if "min_rating" in args:
             try:
                 values.append(int(args["min_rating"]))
             except ValueError:
                 abort(400, "min_rating must be an integer")
             additional += " AND rating >= ?"
+
         if "max_rating" in args:
             try:
                 values.append(int(args["max_rating"]))
@@ -248,6 +288,7 @@ def get_skills_user(user_email):
 
 @app.route('/skills/frequency/<skill_name>', methods=['GET'])
 def get_skill_frequency(skill_name):
+    """Get skill frequency (number of users that have the skill) for a specific skill."""
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
         c.row_factory = sqlite3.Row
@@ -263,6 +304,7 @@ def get_skill_average(skill_name):
     with sqlite3.connect(DB_NAME) as conn:
         c = conn.cursor()
         c.row_factory = sqlite3.Row
+
         query_result = c.execute(
             "SELECT AVG(rating) FROM skills WHERE name = ?",
             [skill_name])
@@ -276,4 +318,4 @@ def get_skill_average(skill_name):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
