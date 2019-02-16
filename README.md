@@ -33,6 +33,8 @@ These libraries are primarily used for interacting with the database, pulling da
 ## Querying the API
 To start the Flask server, simply run the `flask_queries.py` script. By default, Flask will attempt to host the server on `localhost:5000` but this can be changed. The examples below assume that `localhost:5000` is used. Note that the DB_NAME parameter can be configured at the top of the file. The database file must exist in the same directory and must be populated previously for the script to work correctly.
 
+Note: this was run using PyCharm - relative paths may differ depending on how/where the scripts are run (may affect the .db file paths)
+
 ## API Endpoints with Examples
 
 ### Get all users (GET request)
