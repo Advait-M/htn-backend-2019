@@ -223,6 +223,32 @@ def get_skills():
 
     return jsonify([])
 
+@app.route('/skills/<user_email>', methods=['GET'])
+def get_skills_user(user_email):
+    if not check_if_exists(user_email):
+        abort(400, "User with email address provided does not exist.")
+    args = request.args
+    print(args)
+    print(args["min_rating"])
+    with sqlite3.connect(DB_NAME) as conn:
+        c = conn.cursor()
+        c.row_factory = sqlite3.Row
+        additional = ""
+        values = [user_email]
+        if "min_rating" in args:
+            additional += " AND rating >= ?"
+            values.append(args["min_rating"])
+        if "max_rating" in args:
+            additional += " AND rating <= ?"
+            values.append(args["max_rating"])
+        # final_result = []
+        # for i in c.execute("SELECT name, rating FROM skills WHERE email = ?" + additional, values).fetchall()
+        #     final_result.append()
+        return jsonify([dict(zip(row_skill.keys(), tuple(row_skill))) for row_skill in c.execute("SELECT name, rating FROM skills WHERE email = ?" + additional, values).fetchall()])
+
+
+
+
 @app.route('/skills/<skill_name>', methods=['GET'])
 def get_skill_frequency(skill_name):
     with sqlite3.connect(DB_NAME) as conn:
