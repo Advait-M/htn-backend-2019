@@ -17,9 +17,7 @@ The skills table contains the email associated with the user that has a particul
 ## API Endpoints with Examples
 
 ### Get all users (GET request)
-Querying the /users endpoint will return a list of all users which contains their attributes in the JSON format that was inputted.
-
-Example
+Querying the `/users` endpoint will return a list of all users which contains their attributes in the JSON format that was inputted.
 
 Query: `localhost:5000/users`
 
@@ -71,9 +69,7 @@ Example Partial Result:
 ```
 
 ### Get specific user (GET request)
-Querying the /users/<user_email> endpoint with a specific user's email will return the complete details of that user.
-
-Example
+Querying the `/users/<user_email>` endpoint with a specific user's email will return the complete details of that user.
 
 Query: `localhost:5000/users/tonibright@nixelt.com`
 
@@ -97,11 +93,11 @@ Example Result:
 ```
 
 ### Add user (POST request)
-A POST request with a JSON body can be used to add a new user. The new user must have a new, unique email and must follow the specified format with regards to the fields of the JSON. If certain fields aren't specified or do not match the required types, a 400 HTTP error is returned with a short description outlining the reason why the request failed. If the request is successful, a 200 HTTP code is returned along with a JSON representing the user that has just been added.
+A POST request with a JSON body can be used to add a new user at the `/users/add_user` endpoint. The new user must have a new, unique email and must follow the specified format with regards to the fields of the JSON. If certain fields aren't specified or do not match the required types, a 400 HTTP error is returned with a short description outlining the reason why the request failed. If the request is successful, a 200 HTTP code is returned along with a JSON representing the user that has just been added.
 
 Examples
 
-Query: `http://127.0.0.1:5000/users/add_user`
+Query: `localhost:5000/users/add_user`
 JSON Body:
 ```json
 {
@@ -159,6 +155,272 @@ Example Result:
 <h1>Bad Request</h1>
 <p>User already in database: testexample@zizzle.com</p>
 ```
+
+### Delete user (DELETE request)
+Querying the same endpoint for obtaining a specific user's details(`/users/<user_email>`), if we issue an HTTP DELETE request, we can delete the user from the database. If there are no users with the email address provided a 400 error will be returned.
+
+Query: `localhost:5000/users/testexample@zizzle.com`
+
+Example Result:
+`Deleted user successfully!`
+
+If we attempt to delete again, we get:
+```HTML
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>User with specified email does not exist.</p>
+```
+
+### Update user (PUT request)
+Again, querying the same endpoint for obtaining a specific user (`/users/<user_email>`), if we issue an HTTP PUT request, we can update certain fields for that user. The user must exist in the database, otherwise a 400 error will be returned. If any of the fields provided are not part of the columns within the `users` table then these key-value pairs are ignored. Any key-value pairs that are meant to update existing fields must match the specified type for that field, otherwise a 400 error will be returned. Note that all skills must adhere to the format specified as well, however, if new skills are specified then these skills will be added to the skills table (in addition to any existing skills being overwritten as needed, with new ratings). The updated user object is returned (all details).
+
+Query: `localhost:5000/users/testexample@zizzle.com`
+
+JSON Body:
+```json
+{
+    "skills": [
+    	{
+            "name": "Go",
+            "rating": "1"
+        },
+        {
+            "name": "Public Speaking",
+            "rating": "9"
+        },
+        {
+            "name": "New Skill",
+            "rating": "3"
+        }
+    ]
+}
+```
+
+Example Result:
+```json
+{
+    "company": "TestCompany",
+    "email": "testexample@zizzle.com",
+    "latitude": 48.9288,
+    "longitude": -35.0231,
+    "name": "Test Example",
+    "phone": "+2 (555) 123 4567",
+    "picture": "http://lorempixel.com/200/200/sports/5",
+    "skills": [
+        {
+            "name": "Go",
+            "rating": "1"
+        },
+        {
+            "name": "Public Speaking",
+            "rating": "9"
+        },
+        {
+            "name": "New Skill",
+            "rating": "3"
+        }
+    ]
+}
+```
+
+On the other hand, if we attempt an invalid query such as using a string for a skill as opposed to an object:
+
+Query: `localhost:5000/users/testexample@zizzle.com`
+JSON body:
+```json 
+{
+    "skills": [
+    	"this_should_break",
+    	{
+            "name": "Go",
+            "rating": "1"
+        },
+        {
+            "name": "Public Speaking",
+            "rating": "9"
+        },
+        {
+            "name": "New Skill",
+            "rating": "3"
+        }
+    ]
+}
+```
+
+Example Result:
+```HTML
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Skill information must be provided as nested objects with required fields.</p>
+```
+
+### Get skills for a specific user (GET request)
+Querying the `/skills/<user_email>` yields a JSON specifying the skills of the user, with their respective names/ratings, if the email is valid (within the database). If it is not valid, a 400 error is returned with a short description. Additionally, a minimum and/or maximum rating can be specified, to restrict which skills are returned.
+
+Query: `localhost:5000/skills/testexample@zizzle.com`
+
+Example Result:
+```json
+[
+    {
+        "name": "Go",
+        "rating": "1"
+    },
+    {
+        "name": "Public Speaking",
+        "rating": "9"
+    },
+    {
+        "name": "New Skill",
+        "rating": "3"
+    }
+]
+```
+
+With min_rating/max_rating parameters:
+
+Query: `localhost:5000/skills/testexample@zizzle.com?min_rating=2&max_rating=7`
+
+Example Result:
+```json
+[
+    {
+        "name": "New Skill",
+        "rating": "3"
+    }
+]
+```
+
+### Get skill frequency (GET request)
+Querying `/skills/frequency/<skill_name>` with a specific skill name returns the number of users that have that skill (skill frequency). Skills not within the database will have frequencies of 0.
+
+Query: `localhost:5000/skills/frequency/C++`
+
+Example Result:
+```json
+{
+    "skill_frequency": 190
+}
+```
+
+### Get skill average rating (GET request)
+Querying `/skills/average/<skill_name>` with a specific skill name returns the average rating across all users for that specific skill. The skill must appear in the database at least once otherwise a 400 error will be returned with an appropriate description. 
+
+Query: `localhost:5000/skills/average/C++`
+
+Example Result:
+```json
+{
+    "skill_frequency": 5.515789473684211
+}
+```
+
+
+## Get all skills (GET request)
+Querying `/skills` returns a JSON with all skills and their frequencies. Optional parameters for minimum and maximum frequencies can be added as well.
+
+Query: `localhost:5000/skills`
+
+Example Result:
+```
+[
+    {
+        "frequency": 192,
+        "name": "Android"
+    },
+    {
+        "frequency": 192,
+        "name": "Angular"
+    },
+    {
+        "frequency": 191,
+        "name": "C"
+    },
+    {
+        "frequency": 190,
+        "name": "C++"
+    },
+    {
+        "frequency": 180,
+        "name": "Go"
+    },
+    {
+        "frequency": 188,
+        "name": "HTML/CSS"
+    },
+    {
+        "frequency": 191,
+        "name": "JS"
+    },
+    {
+        "frequency": 206,
+        "name": "Java"
+    },
+    {
+        "frequency": 1,
+        "name": "New Skill"
+    },
+    {
+        "frequency": 196,
+        "name": "NodeJS"
+    },
+    {
+        "frequency": 185,
+        "name": "Product Design"
+    },
+    {
+        "frequency": 199,
+        "name": "Public Speaking"
+    },
+    {
+        "frequency": 223,
+        "name": "iOS"
+    }
+]
+```
+
+Now, we can narrow down our range with minimum/maximum frequencies:
+
+Query: `localhost:5000/skills?min_freq=190&max_freq=200`
+
+Example Result:
+```json
+[
+    {
+        "frequency": 192,
+        "name": "Android"
+    },
+    {
+        "frequency": 192,
+        "name": "Angular"
+    },
+    {
+        "frequency": 191,
+        "name": "C"
+    },
+    {
+        "frequency": 190,
+        "name": "C++"
+    },
+    {
+        "frequency": 191,
+        "name": "JS"
+    },
+    {
+        "frequency": 196,
+        "name": "NodeJS"
+    },
+    {
+        "frequency": 199,
+        "name": "Public Speaking"
+    }
+]
+```
+
+
+
 
 
 
