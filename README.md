@@ -26,7 +26,7 @@ These libraries are primarily used for interacting with the database, pulling da
 ## SQLite data types
 - `NULL` - `NULL` value (represented as `None` in Python)
 - `INTEGER` - an integer (represented as `int` in Python)
-- `REAL` - a floating-point number (represented as `float` in Python
+- `REAL` - a floating-point number (represented as `float` in Python)
 - `TEXT` - a text string (represented as `str` in Python)
 - `BLOB` - a blob of data (stored exactly as the input), essentially a bunch of bytes so closest analogy to Python is most likely the `bytes` object
 
