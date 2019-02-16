@@ -149,6 +149,7 @@ Example Result:
 ```
 
 If we attempt to add the same user (duplicate email) again, we get:
+
 Query: Same as above
 
 Example Result:
