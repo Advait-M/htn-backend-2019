@@ -14,6 +14,15 @@ The skills table contains the email associated with the user that has a particul
 
 ![Skills Schema](https://raw.githubusercontent.com/Advait-M/htn-backend-2019/master/img/skills_table_schema.PNG)
 
+## Dependencies
+The following Python libraries are used:
+- sqlite3 (built-in)
+- urllib (built-in)
+- json (built-in)
+- flask (pip)
+
+These libraries are primarily used for interacting with the database, pulling data from the JSON and parsing it, and exposing data through a REST API.
+
 ## API Endpoints with Examples
 
 ### Get all users (GET request)
