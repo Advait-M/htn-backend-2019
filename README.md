@@ -21,7 +21,7 @@ The following Python libraries are used:
 - json (built-in)
 - flask (pip)
 
-These libraries are primarily used for interacting with the database, pulling data from the JSON and parsing it, and exposing data through a REST API.
+These libraries are primarily used for interacting with the database, pulling data from the JSON and parsing it, and exposing data through a REST API. The language version used is Python 3.
 
 ## API Endpoints with Examples
 
